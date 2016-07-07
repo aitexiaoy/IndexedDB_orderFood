@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>设置</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/setting.css">
+
+    <style>
+        .center_right div {
+            margin: 10px 0;
+            }
+
+        .div_canvas {
+            width: 200px;
+            height: 150px;
+            border: 1px solid #e6e6e6;
+            overflow: hidden;
+            }
+
+        .div_canvas img {
+            width: 100%; height: 100%;
+            }
+
+        .div_file {
+            display: block; width: 80px; height: 30px; background-color: #ff7420; text-align: center; line-height: 30px; color: white; border-radius: 10%; overflow: hidden;
+            }
+
+        .div_file label {
+            display: block; width: 80px; height: 30px;
+            }
+
+        .div_file:hover {
+            /*border: 1px solid deepskyblue;*/
+            box-shadow: 0 0 4px rgba(0 0 0 0.4);
+            }
+
+        .div_file input {
+            opacity: 0; display: block; width: 0; height: 0;
+            }
+
+        .div_name {
+            margin-top: 100px;
+            }
+
+        .div_name, .div_price, .div_tag {
+            color: #c7c7c7;
+            padding-left: 5px;
+            height: 30px;
+            line-height: 30px;
+            border: 1px solid #c6c6c6;
+            position: relative;
+            }
+
+        .div_name input, .div_price input, .div_tag input {
+            border: none;
+            outline: none;
+            background-color: transparent;
+            padding-left: 5px;
+            color: black;
+            font-size: 14px;
+            display: inline-block;
+            position: absolute; right: 0; top: 0; width: 220px; height: 30px; line-height: 30px; font-family: "微软雅黑"; font-size: 16px;
+            }
+
+        .div_name input:focus, .div_price input:focus, .div_tag input:focus {
+            outline: none; box-shadow: none;
+            }
+
+        .div_name:focus, .div_price:focus, .div_tag:focus {
+            outline: 1px solid deepskyblue;
+            }
+
+        .btn {
+            display: inline-block;
+            border: none;
+            background-color: #ff7420;
+            color: white;
+            width: 50px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: normal;
+            font-family: "微软雅黑";
+            }
+
+
+    </style>
+</head>
+<body onload="window_onload()">
+<div class="center">
+    <h1>菜单管理</h1>
+    <hr>
+    <div class="center_left" id="show_left"></div>
+    <div class="center_right">
+        <div class="div_canvas">
+            <img src="" id="div_canvas_img">
+            <canvas id="canvas" class="canvas"></canvas>
+        </div>
+        <div class="div_file"><label for="imgFile">添加图片</label>
+            <input type="file" id="imgFile" onchange="file_Img();">
+        </div>
+        <div class="div_name">
+            <label for="name">菜名:</label>
+            <input type="text" id="name" list="name_datalist">
+            <datalist id="name_datalist" style="display: none"></datalist>
+        </div>
+        <div class="div_price">
+            <label for="price">价格:</label>
+            <input type="number" id="price">
+        </div>
+        <div class="div_tag">
+            <label for="tag">分类:</label>
+            <input type="text" id="tag">
+        </div>
+        <div></div>
+
+        <button id="btnAdd" onclick="btnAdd_onclick();" class="btn">新增</button>
+        <button id="btnUpdate" onclick="btnUpdate_onclick();" class="btn">修改</button>
+        <button id="btnDelete" onclick="btnDelete_onclick();" class="btn">删除</button>
+        <a href="index.html" class="return btn">返回</a>
+        <!--<button id="btnClear" onclick="btnClear_onclick();">清除</button>-->
+    </div>
+</div>
+
+
+<script src="js/jquery-3.0.0.js"></script>
+<script src="js/indexDB.js"></script>
+<script src="js/setting.js"></script>
+<script>
+    $(document).on('click', '.content', function (e) {
+        e.preventDefault();//阻止冒泡
+        var $print = $('#print_view_list');
+        var name = $(this).find('p').eq(0).text(); //获得名字
+        findData(name);
+    });
+    //canvas绘画
+    function canvas(img_src, img_width, img_height) {
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext("2d");
+        var offset_width = 200;
+        var offset_height = offset_width * img_height / img_width;
+        canvas.width = offset_width;
+        canvas.height = offset_height;
+        var img = new Image();
+        img.src = img_src;
+        img.onload = function () {
+            context.drawImage(img, 0, 0, img_width, img_height, 0, 0, offset_width, offset_height);
+            $('#div_canvas_img').attr("src", canvas.toDataURL("image/jpeg"));
+        };
+
+    }
+
+    //上传图片
+    function file_Img() {
+        var imgFile = document.getElementById('imgFile').files[0];
+        if (!/image\/w*/.test(imgFile.type)) {
+            alert("请选择正确的文件类型，图像");
+            return false;
+        }
+        var reader = new FileReader();
+        var img = new Image();
+        reader.readAsDataURL(imgFile);
+        reader.onload = function () {
+            var img_src = img.src = this.result;
+            var img_width = img.width;
+            var img_height = img.height;
+            canvas(img_src, img_width, img_height);
+        };
+    }
+
+
+</script>
+</body>
+</html>

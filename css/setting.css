@@ -1,0 +1,17 @@
+.center_left {
+    float: left;
+    width: 650px;
+    height: 700px;
+    overflow-y: auto;
+    border: 1px solid red;
+    box-sizing: border-box;
+    }
+
+.center_right {
+    width: 270px;
+    float: right;
+    height: 600px;
+    border: 1px solid red;
+    padding: 10px;
+    }
+
