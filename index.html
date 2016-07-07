@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            margin: 0 auto;
+            padding: 0 0;
+            }
+
+        .content {
+            float: left;
+            position: relative;
+            box-sizing: border-box;
+            width: 220px;
+            height: 300px;
+            border: 1px solid red;
+            padding: 10px 10px;
+            margin: 20px 10px;
+            }
+
+        .content_top {
+            position: absolute;
+            box-sizing: border-box;
+            width: 200px;
+            height: 150px;
+            overflow: hidden;
+            border: 1px solid red;
+            }
+
+        .content_top img {
+            width: 100%;
+            }
+
+        .content_bottom {
+            position: absolute;
+            width: 200px; height: 100px;
+            top: 200px;
+            }
+
+        .content_bottom p {
+            display: inline-block;
+            }
+
+        .show_result {
+            width: 900px;
+            margin: 0 auto;
+            }
+
+        .content a {
+            display: inline-block;
+            width: 100%; height: 100%;
+            }
+
+        .canvas {
+            display: none;
+            }
+
+        .print_view {
+            position: fixed;
+            width: 300px;
+            height: 600px;
+            top: 100px;
+            right: 100px;
+            background-color: #e7bd7f;
+            }
+
+        .show_row {
+            margin: 0; padding: 0; display: inline-block;
+            cursor: pointer;
+            }
+
+        .show_row li {
+            margin: 20px; padding: 0; display: inline-block; list-style: none;
+            }
+    </style>
+</head>
+
+
+<body>
+<input type="file" id="imgFile" onchange="file_Img();">
+<label for="name">菜名:</label> <input type="text" id="name" list="name_datalist">
+<datalist id="name_datalist" style="display: none"></datalist>
+<label for="price">价格:</label><input type="number" id="price">
+<label for="tag">分类:</label><input type="text" id="tag">
+<!--<label for="tbxCode">检索:</label><input type="text" id="tbxCode">-->
+
+<button id="btnNew" onclick="btnNew_onclick();">新增</button>
+<button id="btnAdd" onclick="btnAdd_onclick();">追加</button>
+<button id="btnUpdate" onclick="btnUpdate_onclick();">修改</button>
+<button id="btnDelete" onclick="btnDelete_onclick();">删除</button>
+<button id="btnClear" onclick="btnClear_onclick();">清除</button>
+
+
+<div class="show_result" id="show_result"></div>
+
+<div class="print_view" id="print_view">
+    <p>订单</p>
+    <button onclick="sure_btn();">确认</button>
+</div>
+
+<canvas id="canvas" class="canvas"></canvas>
+
+<script src="js/jquery-3.0.0.js"></script>
+<script>
+
+    window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window || window.webkitIDBCursor || window.msIDBCursor;
+    var dbName = 'MyData';  //数据库名
+    var dbVersion = 20160705;//数据库版本号
+    var idb, datatable;
+    var data;
+    var result_ImgSrc;
+    /* 连接数据库或者创建数据库*/
+    function window_onload() {
+        var dbConnect = indexedDB.open(dbName, dbVersion);//连接数据库
+        dbConnect.onsuccess = function (e) {   //连接成功
+            idb = e.target.result;            //获取数据库
+            showAllData(true);
+        };
+        dbConnect.onerror = function () {
+            alert('数据库连接失败');
+        };
+
+        //创建对象仓库
+        dbConnect.onupgradeneeded = function (e) {
+
+            idb = e.target.result;
+            if (!idb.objectStoreNames.contains('orders')) {
+                var tx = e.target.transaction;
+                tx.oncomplete = function () {
+//                    showAllData(true);
+
+                };
+                tx.onabort = function (e) {
+                    alert('对象仓库创建失败');
+                };
+                var name = 'orders';
+                var optionalParameters = {
+                    keyPath: 'id',
+                    autoIncrement: true
+                };
+                var store = idb.createObjectStore(name, optionalParameters);
+                alert('对象仓库创建成功');
+                //索引
+                var name = 'codeIndex';
+                var keyPath = 'name';
+                var optionalParameters = {
+                    unique: true,
+                    multiEntry: false
+                };
+                var idx = store.createIndex(name, keyPath, optionalParameters);
+                alert('创建索引成功');
+            }
+        };
+    }
+
+
+    //追加数据
+    function btnAdd_onclick() {
+        var data = new Object();
+        data.name = $('#name').val();
+        data.price = $('#price').val();
+        data.tag = $('#tag').val();
+        var tx = idb.transaction(['orders'], 'readwrite');
+        var chkErrorMsg = "";
+        tx.oncomplete = function () {
+            if (chkErrorMsg != "") {
+                alert(chkErrorMsg);
+            } else {
+                alert("追加成功");
+                showAllData(false);
+                btnNew_onclick();
+            }
+        };
+
+        tx.onabort = function () {
+            alert("追加数据失败");
+        };
+        var store = tx.objectStore('orders');
+        var idx = store.index('codeIndex');
+        var range = IDBKeyRange.only(data.name);
+        var direction = "next";
+        var req = idx.openCursor(range, direction);
+        req.onsuccess = function () {
+            var cursor = this.result;
+            if (cursor) {
+                chkErrorMsg = "输入的名字已经存在";
+            } else {
+                var value = {
+                    name: data.name,
+                    price: data.price,
+                    tag: data.tag,
+                    src: result_ImgSrc
+                };
+                store.add(value);
+                result_ImgSrc = null;
+            }
+        };
+        req.onerror = function () {
+            alert("追加数据失败");
+            result_ImgSrc = null;
+        };
+
+    }
+
+    //修改数据
+    function btnUpdate_onclick() {
+        var data = new Object();
+        data.name = $('#name').val();
+        data.price = $('#price').val();
+        data.tag = $('#tag').val();
+        data.src = result_ImgSrc;
+
+        var tx = idb.transaction(['orders'], "readwrite");
+        tx.oncomplete = function () {
+            alert("修改数据成功");
+            showAllData(false);
+        };
+        tx.onabort = function () {
+            alert("修改数据失败");
+        };
+        var store = tx.objectStore('orders');
+        var idx = store.index('codeIndex');
+        var range = IDBKeyRange.only(data.name);
+        var direction = "next";
+        var req = idx.openCursor(range, direction);
+        req.onsuccess = function () {
+            var cursor = this.result;
+            if (cursor) {
+                console.log(data.src);
+                var value = {
+                    id: cursor.value.id,
+                    name: data.name,
+                    price: data.price,
+                    tag: data.tag
+                };
+                if (data.src != null)
+                    value.src = data.src;
+                cursor.update(value);
+                result_ImgSrc = null;
+            }
+            else {
+                alert("要更改的数据不存在");
+                result_ImgSrc = null;
+            }
+        };
+        req.onerror = function () {
+            alert("修改数据失败");
+        };
+
+    }
+
+    //删除
+    function btnDelete_onclick() {
+        var tx = idb.transaction(['orders'], 'readwrite');
+        tx.oncomplete = function () {
+            alert('删除数据成功');
+            showAllData(false);
+            btnNew_onclick();
+        };
+        tx.onabort = function () {
+            alert("删除数据失败");
+        };
+        var store = tx.objectStore('orders');
+
+        var idx = store.index('codeIndex');
+        var range = IDBKeyRange.only(document.getElementById('name').value);
+        var direction = "next";
+        var req = idx.openCursor(range, direction);
+        req.onsuccess = function () {
+            var cursor = this.result;
+            if (cursor) {
+                cursor.delete();
+            }
+            else {
+                alert("要删除的数据不存在")
+            }
+        };
+        req.onerror = function () {
+            alert("删除数据失败");
+        }
+    }
+
+
+    //显示数据
+    function showAllData(loadPage) {
+        if (!loadPage) {
+            removeAllData();
+        }
+
+        var tx = idb.transaction(['orders'], 'readonly');
+        var store = tx.objectStore('orders');
+        var range = IDBKeyRange.lowerBound(1);
+        var direction = "next";
+        var req = store.openCursor(range, direction);
+        var i = 0;
+        req.onsuccess = function () {
+            var cursor = this.result;
+            if (cursor) {
+                i++;
+                showData(cursor.value);
+                cursor.continue();//继续向下检索
+            }
+        };
+        req.onerror = function () {
+            alert("检索数据失败");
+        };
+
+
+    }
+
+    function removeAllData() {
+        $('#show_result').children().remove();
+        $('#name_datalist').children().remove();
+    }
+
+    function showData(row) {
+        var show_result = document.getElementById('show_result');
+        var p1 = document.createElement('p');
+        p1.innerHTML = row.name;
+        var p2 = document.createElement('p');
+        p2.innerHTML = row.price;
+        var p3 = document.createElement('p');
+        p3.innerHTML = row.tag;
+        var img = document.createElement('img');
+        img.src = row.src;
+        var div1 = document.createElement('div');
+        var div2 = document.createElement('div');
+        div1.appendChild(img);
+        div2.appendChild(p1);
+        div2.appendChild(p2);
+        div2.appendChild(p3);
+        var a = document.createElement('a');
+        a.appendChild(div1);
+        a.appendChild(div2);
+//        a.setAttribute("onclick", "click_btn();");
+        var div = document.createElement('div');
+        div.appendChild(a);
+        div1.className = "content_top";
+        div2.className = "content_bottom";
+        div.className = "content";
+//        document.body.appendChild(div);
+        show_result.appendChild(div);
+
+        var name_datalist = document.getElementById('name_datalist');
+        var option = document.createElement('option');
+        option.value = row.name;
+        option.innerHTML = row.name;
+        name_datalist.appendChild(option);
+    }
+
+    function btnNew_onclick() {
+
+    }
+
+    function btnClear_onclick() {
+
+    }
+    //删除数据库
+    function deleteDB(name) {
+        indexedDB.deleteDatabase(name);
+    }
+
+    //canvas绘画
+    function canvas(img_src, img_width, img_height) {
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext("2d");
+        var offset_width = 200;
+        var offset_height = offset_width * img_height / img_width;
+        canvas.width = offset_width;
+        canvas.height = offset_height;
+        var img = new Image();
+        img.src = img_src;
+        img.onload = function () {
+            context.drawImage(img, 0, 0, img_width, img_height, 0, 0, offset_width, offset_height);
+            result_ImgSrc = canvas.toDataURL("image/jpeg");
+        };
+
+    }
+
+    //上传图片
+    function file_Img() {
+        var imgFile = document.getElementById('imgFile').files[0];
+        if (!/image\/w*/.test(imgFile.type)) {
+            alert("请选择正确的文件类型，图像");
+            return false;
+        }
+        var reader = new FileReader();
+        var img = new Image();
+        reader.readAsDataURL(imgFile);
+        reader.onload = function () {
+            var img_src = img.src = this.result;
+            var img_width = img.width;
+            var img_height = img.height;
+            canvas(img_src, img_width, img_height);
+        };
+    }
+
+    function sure_btn() {
+        $('#print_view').find('p').remove();
+    }
+
+    window.onload = function () {
+        window_onload();
+    };
+
+
+    //为动态生成的菜单元素注册事件（如果直接注册监听事件，将注册不成功）
+    $(document).on('click', '.content', function (e) {
+        e.preventDefault();//阻止冒泡
+        var $print = $('#print_view');
+        var name = $(this).find('p').eq(0).text();
+        var price = Number($(this).find('p').eq(1).text());
+        //菜名
+        var $show_name = $('<li class="show_name">' + name + '</li>');
+        //单价
+        var $show_price = $('<li class="show_price">' + price + '</li>');
+        //数量
+        var $show_number = $('<li class="show_number">1</li>');
+        //单菜品总价
+        var $show_totalPrices = $('<li class="show_totalPrices">' + price + '</li>');
+        //总价
+        var $totalPrices_name = $('<li class="totalPrice_name">找零:</li>');
+        var $totalPrice = $('<li class="totalPrice">' + price + '</li>');
+        //实收
+        var $getMoney_name = $('<li class="totalPrice_name">实收:</li>');
+        var $getMoney = $('<li><input class="getMoney"  id="getMoney" type="number" autofocus="autofocus"></li>');
+        //找零
+        var $show_row = $('<ul class="show_row"></ul>');
+        var $show_row1 = $('<ul class="show_row"></ul>');
+        var $show_row2 = $('<ul class="show_row"></ul>');
+
+        if ($('.totalPrice').length == 0) {
+            $show_row.append($totalPrices_name);
+            $show_row.append($totalPrice);
+            $print.append($show_row);
+            $show_row2.append($getMoney_name);
+            $show_row2.append($getMoney);
+            $print.append($show_row2);
+        }
+        var regname = new RegExp(name);
+        if (regname.test($('.show_name').text())) {
+            var this_show_row = $('.show_row').filter(function (index) {
+                return $('.show_name', this).text() == name
+            });
+            var old_number = Number(this_show_row.find('.show_number').text());
+            var new_number = old_number + 1;
+            var old_totalPrices = Number(this_show_row.find('.show_totalPrices').text());
+            var new_totalPrices = old_totalPrices + price;
+            this_show_row.find('.show_number').text(new_number);
+            this_show_row.find('.show_totalPrices').text(new_totalPrices);
+        }
+        else {
+            $show_row1.append($show_name);
+            $show_row1.append($show_price);
+            $show_row1.append($show_number);
+            $show_row1.append($show_totalPrices);
+            $('.totalPrice').parent().before($show_row1);
+        }
+        if ($('.totalPrice').length > 0) {
+            var $totalPrice = 0;
+            $('.show_totalPrices').each(
+                    function () {
+                        $totalPrice += Number($(this).text());
+                    });
+            $('.totalPrice').text($totalPrice);
+            console.log($totalPrice);
+        }
+
+    });
+
+    //为点餐后的菜名增加点击事件监听，如果点击打印行，则打印行的数量减1，总价变化，如果数量为1则直接删除本行
+    $(document).on('click', '.show_row', function (e) {
+        e.preventDefault();//阻止冒泡
+        var $this = $(this);
+        var $number = Number($this.find('[class="show_number"]').text());    //数量
+        var $price = Number($this.find('[class="show_price"]').text());              //单价
+        if ($number === 1) {
+            $this.remove();
+        } else {
+            $number = $number - 1;
+            var totalrices = $number * $price;
+            $this.find('[class="show_number"]').text($number);
+            $this.find('[class="show_totalPrices"]').text(totalrices);
+        }
+        var $tatalPrice = 0;
+        $('.show_totalPrices').each(
+                function () {
+                    $tatalPrice += Number($(this).text());
+                });
+        if ($tatalPrice == 0) {
+            $('.totalPrice').parent().remove();
+        } else {
+            $('.totalPrice').text($tatalPrice);
+        }
+    });
+    //绑定实收事件，输入后新增找零绑定了2个事件，分别是按键事件，以及失去焦点事件
+    $(document).on({
+                keydown: function (e) {
+                    //如果按下enter键
+                    if ((e.which == 13)) {
+                        e.preventDefault();
+                        var $getMoney = Number($('.getMoney').val());
+                        var $totalPrice = Number($('.totalPrice').text());
+                        var $dispenser = $getMoney - $totalPrice;
+                        var $show_row = $('<ul class="show_row"></ul>');
+                        var $dispenser_name = $('<li class="dispenser_name">找零:</li>');
+                        var $dispenser_row = $('<li class="dispenser">' + $dispenser + '</li>');
+                        if ($('.dispenser_name').length > 0) {
+                            $('.dispenser').text($dispenser);
+                        }
+                        else {
+                            $show_row.append($dispenser_name);
+                            $show_row.append($dispenser_row);
+                            $('.print_view').append($show_row);
+                        }
+                    }
+                },
+                blur: function (e) {
+                    e.preventDefault();
+                    var $getMoney = Number($('.getMoney').val());
+                    var $totalPrice = Number($('.totalPrice').text());
+                    var $dispenser = $getMoney - $totalPrice;
+                    var $show_row = $('<ul class="show_row"></ul>');
+                    var $dispenser_name = $('<li class="dispenser_name">找零:</li>');
+                    var $dispenser_row = $('<li class="dispenser">' + $dispenser + '</li>');
+                    if ($('.dispenser_name').length > 0) {
+                        $('.dispenser').text($dispenser);
+                    }
+                    else {
+                        $show_row.append($dispenser_name);
+                        $show_row.append($dispenser_row);
+                        $('.print_view').append($show_row);
+                    }
+                }
+            },
+            '.getMoney'
+    )
+
+
+</script>
+</body>
+</html>
