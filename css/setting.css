@@ -1,17 +1,49 @@
-.center_left {
-    float: left;
-    width: 650px;
-    height: 700px;
-    overflow-y: auto;
-    border: 1px solid red;
-    box-sizing: border-box;
-    }
 
-.center_right {
-    width: 270px;
-    float: right;
-    height: 600px;
-    border: 1px solid red;
-    padding: 10px;
-    }
+.center_left { float: left; width: 650px; height: 700px; overflow-y: auto; box-sizing: border-box; margin: 0 -5px; padding: 10px 0; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2); }
+
+.center_left::-webkit-scrollbar { width: 10px; height: 10px }
+
+/*.center_left::-webkit-scrollbar-button { background-color: #ff177e; border-radius: 10px;}*/
+
+/*.center_left::-webkit-scrollbar-track { background-color: #ff7420; }*/
+
+/*.center_left::-webkit-scrollbar-track-piece { background-color: blue; border-radius: 10px; height: 40px;display: block;}*/
+
+.center_left::-webkit-scrollbar-thumb { background-color: #00c3f4; height: 10px; border-radius: 10px; }
+
+/*.center_left::-webkit-scrollbar-corner { background-color: darkcyan; }*/
+
+/*.center_left::-webkit-scrollbar-resizer { background-color: deepskyblue; }*/
+
+.center_right { width: 270px; float: right; height: 400px; padding: 10px; background-color: #f7f7f7; color: white; }
+
+.center_right div { margin: 10px 0; }
+
+.div_canvas { width: 200px; height: 150px;  overflow: hidden; }
+
+.canvas { display: none; }
+
+.div_canvas img { width:200px; height: 150px; }
+
+.div_file { display: block; width: 80px; height: 30px; background-color: #ff7c00; text-align: center; line-height: 30px; color: white; border-radius: 5px; overflow: hidden; border: 1px solid #ff7c00; }
+
+.div_file label { display: block; width: 80px; height: 30px; }
+
+.div_file:hover { box-shadow: 0 0 4px rgba(0, 0, 0, 0.4); border: 1px solid deepskyblue; }
+
+.div_file input { opacity: 0; display: block; width: 0; height: 0; }
+
+.div_name { margin-top: 100px; }
+
+.div_name, .div_price, .div_tag { color: #c7c7c7; padding-left: 5px; height: 30px; line-height: 30px; border: 1px solid #c6c6c6; position: relative; }
+
+.div_name input, .div_price input, .div_tag input { border: none; outline: none; background-color: transparent; padding-left: 5px; color: black; font-size: 14px; display: inline-block; position: absolute; right: 0; top: 0; width: 220px; height: 30px; line-height: 30px; font-family: "微软雅黑"; font-size: 16px; }
+
+.div_name input:focus, .div_price input:focus, .div_tag input:focus { outline: none; box-shadow: none; }
+
+.div_name:focus, .div_price:focus, .div_tag:focus { outline: 1px solid deepskyblue; }
+
+.btn { display: inline-block; background-color: #ff7c00; color: white; width: 50px; height: 30px; text-align: center; line-height: 28px; text-decoration: none; font-size: 14px; font-weight: normal; font-family: "微软雅黑"; border-radius: 5px; border: 1px solid #ff7c00; box-sizing: border-box; }
+
+.btn:hover { border: 1px solid deepskyblue; box-shadow: 0 0 3px rgba(0, 0, 0, 0.4); }
 

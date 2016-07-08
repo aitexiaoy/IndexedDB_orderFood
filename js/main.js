@@ -5,9 +5,7 @@ window.onload = function () {
     window_onload();
     Order_IndexedDB();
 };
-window.close = function () {
-    close_IndexedDB();
-};
+
 //为动态生成的菜单元素注册事件（如果直接注册监听事件，将注册不成功）
 $(document).on('click', '.content', function (e) {
     e.preventDefault();//阻止冒泡
@@ -307,7 +305,8 @@ function sure_btn() {
     }
     var time = new Date();
     var Warehouse = time.getFullYear() + Addling(time.getMonth() + 1) + Addling(time.getDate());
-    var id = Warehouse + Addling(orderNum, 4);
+    //var id = Warehouse + Addling(orderNum, 4);
+    var id = $('.order_number').children().eq(0).text();
     var data = {};
     var list_name = [];
     var list_num = [];
@@ -326,6 +325,8 @@ function sure_btn() {
     data.orderTime = order_time;
     orderNum = Number(orderNum) + 1;
     btnAdd(Warehouse, data);
+    $('.input_deskNumber').text("");
+    $('.input_deskNumber').focus();
     localStorage.setItem('OrderNumber', orderNum);
     showList_clear_flag = true;
 }

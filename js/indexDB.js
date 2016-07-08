@@ -220,6 +220,7 @@ function findData(name) {
             $('#tag').val(cursor.value.tag);
             $('#div_canvas_img').attr("src", cursor.value.src);
             $('.div_file').children().eq(0).text("修改图片");
+            btnControl_onclick();
         }
     };
     req.onerror = function () {
@@ -280,25 +281,21 @@ function btnControl_onclick() {
     if ($('#div_canvas_img').attr("src") == "") {
         $('#btnUpdate').attr("disabled", "disabled");
         $('#btnUpdate').css({
-            "background-color": "red",
-            "color": 'black'
+            "color": 'red'
         });
         $('#btnDelete').attr("disabled", "disabled");
         $('#btnDelete').css({
-            "background-color": "red",
-            "color": 'black'
+            "color": 'red'
         });
         console.log($('#name').val());
     }
     else {
         $('#btnUpdate').removeAttr("disabled");
         $('#btnUpdate').css({
-            "background-color": "#ff7420",
             "color": 'white'
         });
         $('#btnDelete').removeAttr("disabled");
         $('#btnDelete').css({
-            "background-color": "#ff7420",
             "color": 'white'
         });
     }
@@ -310,6 +307,7 @@ function btnClear_onclick() {
     $('#tag').val("");
     $('#div_canvas_img').attr("src", "");
     $('.div_file').children().eq(0).text("添加图片");
+    btnControl_onclick();
 }
 //删除数据库
 function deleteDB(name) {
