@@ -89,7 +89,7 @@
 
     </style>
 </head>
-<body onload="window_onload()">
+<body onload="window_onload();btnControl_onclick()">
 <div class="center">
     <h1>菜单管理</h1>
     <hr>
@@ -120,6 +120,7 @@
         <button id="btnAdd" onclick="btnAdd_onclick();" class="btn">新增</button>
         <button id="btnUpdate" onclick="btnUpdate_onclick();" class="btn">修改</button>
         <button id="btnDelete" onclick="btnDelete_onclick();" class="btn">删除</button>
+        <button id="btnClear" onclick="btnClear_onclick();" class="btn">清除</button>
         <a href="index.html" class="return btn">返回</a>
         <!--<button id="btnClear" onclick="btnClear_onclick();">清除</button>-->
     </div>
@@ -135,7 +136,12 @@
         var $print = $('#print_view_list');
         var name = $(this).find('p').eq(0).text(); //获得名字
         findData(name);
+        btnControl_onclick();
     });
+    //    $("#name").val().on('change', function () {
+    //        console.log("-------");
+    //        btnControl_onclick();
+    //    });
     //canvas绘画
     function canvas(img_src, img_width, img_height) {
         var canvas = document.getElementById('canvas');

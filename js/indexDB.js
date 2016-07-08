@@ -101,7 +101,7 @@ function btnAdd_onclick() {
     req.onerror = function () {
         alert("追加数据失败");
     };
-
+    btnClear_onclick();
 }
 
 //修改数据
@@ -137,11 +137,7 @@ function btnUpdate_onclick() {
                 src: data.src
             };
             cursor.update(value);
-            $('#name').val("");
-            $('#price').val("");
-            $('#tag').val("");
-            $('#div_canvas_img').attr("src", "");
-            $('.div_file').children().eq(0).text("添加图片");
+            btnClear_onclick();
         }
         else {
             alert("要更改的数据不存在");
@@ -173,11 +169,7 @@ function btnDelete_onclick() {
         var cursor = this.result;
         if (cursor) {
             cursor.delete();
-            $('#name').val("");
-            $('#price').val("");
-            $('#tag').val("");
-            $('#div_canvas_img').attr("src", "");
-            $('.div_file').children().eq(0).text("添加图片");
+            btnClear_onclick();
         }
         else {
             alert("要删除的数据不存在");
@@ -223,7 +215,6 @@ function findData(name) {
     req.onsuccess = function () {
         var cursor = this.result;
         if (cursor) {
-            console.log(cursor.value);
             $('#name').val(cursor.value.name);
             $('#price').val(cursor.value.price);
             $('#tag').val(cursor.value.tag);
@@ -283,14 +274,47 @@ function showData(row) {
     //}
 }
 
-function btnNew_onclick() {
-
+//按钮控制
+function btnControl_onclick() {
+    console.log("-------");
+    if ($('#div_canvas_img').attr("src") == "") {
+        $('#btnUpdate').attr("disabled", "disabled");
+        $('#btnUpdate').css({
+            "background-color": "red",
+            "color": 'black'
+        });
+        $('#btnDelete').attr("disabled", "disabled");
+        $('#btnDelete').css({
+            "background-color": "red",
+            "color": 'black'
+        });
+        console.log($('#name').val());
+    }
+    else {
+        $('#btnUpdate').removeAttr("disabled");
+        $('#btnUpdate').css({
+            "background-color": "#ff7420",
+            "color": 'white'
+        });
+        $('#btnDelete').removeAttr("disabled");
+        $('#btnDelete').css({
+            "background-color": "#ff7420",
+            "color": 'white'
+        });
+    }
 }
 
 function btnClear_onclick() {
-
+    $('#name').val("");
+    $('#price').val("");
+    $('#tag').val("");
+    $('#div_canvas_img').attr("src", "");
+    $('.div_file').children().eq(0).text("添加图片");
 }
 //删除数据库
 function deleteDB(name) {
     indexedDB.deleteDatabase(name);
+}
+function close_IndexedDB() {
+    Order_Idb.close();
 }

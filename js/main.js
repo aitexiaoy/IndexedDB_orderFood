@@ -3,10 +3,32 @@
  */
 window.onload = function () {
     window_onload();
+    Order_IndexedDB();
+};
+window.close = function () {
+    close_IndexedDB();
 };
 //为动态生成的菜单元素注册事件（如果直接注册监听事件，将注册不成功）
 $(document).on('click', '.content', function (e) {
     e.preventDefault();//阻止冒泡
+    if (showList_clear_flag) {
+        $('.show_row').remove();
+        $('.sure_btn').hide();
+        showList_clear_flag = false;
+    }
+    //订单号
+    var time = new Date();
+    var Warehouse = time.getFullYear() + Addling(time.getMonth() + 1) + Addling(time.getDate());
+    var data = localStorage.getItem("data");
+    //if (data == null) {
+    //    localStorage.setItem("data", Warehouse);
+    //}
+    if (Warehouse != data) {
+        localStorage.setItem("data", Warehouse);
+        localStorage.setItem("OrderNumber", 1);
+    }
+    $('.order_number').children().eq(0).text(localStorage.getItem("data") + Addling(localStorage.getItem("OrderNumber"), 4));
+
     var $print = $('#print_view_list');
     var name = $(this).find('p').eq(0).text();
     var price = Number($(this).find('p').eq(1).text());
@@ -83,7 +105,6 @@ $(document).on('click', '.content', function (e) {
                 $totalPrice += Number($(this).text());
             });
         $('.totalPrice').text($totalPrice);
-        console.log($totalPrice);
     }
     $('.getMoney').get(0).focus();
 });
@@ -204,27 +225,107 @@ function Addling(value, number) {
 
     return result;
 }
+var Order_Idb;
+/* 连接数据库或者创建数据库*/
+//数据库按月建立，仓库是按日建立，要使建立仓库成功，就必须更新数据库的版本号。
+function Order_IndexedDB() {
+    var time = new Date();
+    var Warehouse = time.getFullYear() + Addling(time.getMonth() + 1) + Addling(time.getDate());
+    var dbName = 'Order' + time.getFullYear() + Addling(time.getMonth() + 1);
+    var dbVersion = Warehouse;
+    var dbConnect = indexedDB.open(dbName, dbVersion);//连接数据库
+    dbConnect.onsuccess = function (e) {   //连接成功
+        Order_Idb = e.target.result;            //获取数据库
+        var tx = Order_Idb.transaction([Warehouse], "readonly");
+        var store = tx.objectStore(Warehouse);
+        console.log(store.get(1));
+    };
+    dbConnect.onerror = function () {
+        alert('数据库连接失败');
+    };
 
+    //创建对象仓库
+    dbConnect.onupgradeneeded = function (e) {
+        Order_Idb = e.target.result;
+        console.log(Order_Idb);
+        if (!Order_Idb.objectStoreNames.contains(Warehouse)) {
+            var tx = e.target.transaction;
+            tx.oncomplete = function () {
+
+            };
+            tx.onabort = function (e) {
+                alert('对象仓库创建失败');
+            };
+            var name = Warehouse;
+            var optionalParameters = {
+                keyPath: 'id',
+                autoIncrement: true
+            };
+            var store = Order_Idb.createObjectStore(name, optionalParameters);
+            alert('对象仓库创建成功');
+            //索引
+            var name = 'codeIndex';
+            var keyPath = 'orderId';
+            var optionalParameters = {
+                unique: true,
+                multiEntry: false
+            };
+            var idx = store.createIndex(name, keyPath, optionalParameters);
+            alert('创建索引成功');
+        }
+    };
+}
+
+//追加数据
+function btnAdd(Warehouse, data) {
+    //开启事务
+    var tx = Order_Idb.transaction([Warehouse], 'readwrite');
+    var store = tx.objectStore(Warehouse);
+    var value = {
+        orderId: data.id,
+        total: data.total,
+        listName: data.listName,
+        listNum: data.listNum,
+        orderTime: data.orderTime
+    };
+    var req = store.put(value);
+    req.onsuccess = function (e) {
+        //alert("数据保存成功");
+    };
+    req.onerror = function () {
+        //alert("追加数据失败");
+    };
+}
+var showList_clear_flag;
 //更新订单号：订单号格式20160710001前8位为日期号后4位为顺序编号
 function sure_btn() {
 //订单号
+    //利用LocalStorage储存编号
+    var orderNum = localStorage.getItem('OrderNumber');
+    if (!orderNum) {
+        orderNum = 1;
+    }
     var time = new Date();
-    var num = 1;
+    var Warehouse = time.getFullYear() + Addling(time.getMonth() + 1) + Addling(time.getDate());
+    var id = Warehouse + Addling(orderNum, 4);
     var data = {};
-    var list1 = {};
-    var
-    var i = 1;
-    var id = time.toLocaleDateString().replace(/\//g, "") + Addling(num, 4);
+    var list_name = [];
+    var list_num = [];
+    var order_time = time.getTime();
     var totalPrice = $(".totalPrice").text();
     $('.show_list').each(function () {
         var name = $(this).find('[class="show_name"]').text();
         var number = $(this).find('[class="show_number"]').text();
-        list1.name = name;
-        list1.number = number;
+        list_name.push(name);
+        list_num.push(number);
     });
     data.id = id;
     data.total = totalPrice;
-    data.list1 = list1;
-    Data.unshift(data);
-
+    data.listName = list_name;
+    data.listNum = list_num;
+    data.orderTime = order_time;
+    orderNum = Number(orderNum) + 1;
+    btnAdd(Warehouse, data);
+    localStorage.setItem('OrderNumber', orderNum);
+    showList_clear_flag = true;
 }
