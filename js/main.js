@@ -9,11 +9,6 @@ window.onload = function () {
 //为动态生成的菜单元素注册事件（如果直接注册监听事件，将注册不成功）
 $(document).on('click', '.content', function (e) {
     e.preventDefault();//阻止冒泡
-    if (showList_clear_flag) {
-        $('.show_row').remove();
-        $('.sure_btn').hide();
-        showList_clear_flag = false;
-    }
     //订单号
     var time = new Date();
     var Warehouse = time.getFullYear() + Addling(time.getMonth() + 1) + Addling(time.getDate());
@@ -294,7 +289,6 @@ function btnAdd(Warehouse, data) {
         //alert("追加数据失败");
     };
 }
-var showList_clear_flag;
 //更新订单号：订单号格式20160710001前8位为日期号后4位为顺序编号
 function sure_btn() {
 //订单号
@@ -328,5 +322,6 @@ function sure_btn() {
     $('.input_deskNumber').text("");
     $('.input_deskNumber').focus();
     localStorage.setItem('OrderNumber', orderNum);
-    showList_clear_flag = true;
+    $('.show_row').remove();
+    $('.sure_btn').hide();
 }
