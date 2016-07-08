@@ -4,6 +4,7 @@
 window.onload = function () {
     window_onload();
     Order_IndexedDB();
+    Issetting();
 };
 
 //为动态生成的菜单元素注册事件（如果直接注册监听事件，将注册不成功）
@@ -324,4 +325,11 @@ function sure_btn() {
     localStorage.setItem('OrderNumber', orderNum);
     $('.show_row').remove();
     $('.sure_btn').hide();
+}
+
+//网页跳转，如果没有数据打开设置网页
+function Issetting() {
+    if ($('.content').length == 0) {
+        window.open('setting.html','_parent');
+    }
 }
