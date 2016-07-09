@@ -1,0 +1,14 @@
+showEvents({
+"events":
+[
+{"location": "San 1", "date": "1 1", "map": "img/map-ca.png"
+},
+{
+"location": "San 2", "date": "2 2", "map": "2"
+},
+{
+"location": "San 3", "date": "3 3", "map": "3"}
+]
+});
+
+
